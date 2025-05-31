@@ -15,13 +15,13 @@ int check_user_ptr(const void *uaddr)
 {
   if(uaddr==NULL||!is_user_vaddr(uaddr))
   {
-    printf("wrong user ptr");
+
     process_exit();
     return -1;
   }
   if (!pagedir_get_page(thread_current()->pcb->pagedir, uaddr))
   {
-    printf("wrong user ptr");
+ 
     process_exit();
     return -1;
   }
@@ -33,12 +33,12 @@ int check_str_ptr(const char* str)
 
   if(str==NULL||!is_user_vaddr(str))
   {
-    // printf("wrong user ptr");
+    
     return -1;
   }
   if (!pagedir_get_page(thread_current()->pcb->pagedir, str))
   {
-    // printf("wrong user ptr");
+   
     return -1;
   }
 
@@ -62,6 +62,9 @@ case SYS_EXIT:
   /* code */
   f->eax = args[1];
   printf("%s: exit(%d)\n", thread_current()->pcb->process_name, args[1]);
+  //将状态保存
+   thread_current()->exit_status=args[1];
+
   process_exit();
   break;
 case SYS_PRACTICE:
@@ -87,8 +90,7 @@ case SYS_EXEC:
   
   f->eax=tid;
 
-   // 等待子进程加载并开始执行
-  // sema_down(&child_loaded_sema);  // 子进程完成加载时会释放信号量
+
   if (tid == TID_ERROR)
   {
     f->eax=-1;
@@ -99,22 +101,13 @@ case SYS_WAIT:
 pid_t pid=args[1];
 
 
-if(process_wait(pid)==-1)
-{
- 
-  f->eax=-1;
-  break;
-  
-}
-else{
-  f->eax=0;
-  break;
-}
+f->eax=process_wait(pid);
+break;
 
 
  
 case SYS_WRITE:
-
+//write函数调用
   printf("%s",(char*)args[2]);
   break; 
 

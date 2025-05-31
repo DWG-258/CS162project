@@ -95,7 +95,7 @@ struct thread {
   
   struct thread* parent;
   struct list children;
-  
+  int exit_status;
    
 #ifdef USERPROG
   /* Owned by process.c. */

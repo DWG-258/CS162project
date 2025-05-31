@@ -230,10 +230,29 @@ int process_wait(pid_t child_pid UNUSED) {
   {
     return -1;
   }
-  sema_down(&temporary);
 
-  
-  return 0;
+  if(child->waited)
+  {
+    return -1;
+  }
+  else
+  {
+    child->waited=true;
+  }
+  if(!child->exited)
+  {
+    sema_down(&child->wait_sema);
+    int status =child->exit_status;
+    list_remove(&child->elem);
+    free(child);
+    return status;
+  }
+
+  // sema_down(&child->wait_sema);
+  // sema_down(&temporary);
+
+
+  return -1;
 }
 
 /* Free the current process's resources. */
@@ -277,7 +296,7 @@ void process_exit(void) {
     for (e = list_begin(&parent->children); e != list_end(&parent->children); e = list_next(e)) {
       struct child_status *cs = list_entry(e, struct child_status, elem);
       if (cs->pid == thread_current()->tid) {
-        cs->exit_status = THREAD_DYING;  // 你可能需要添加 exit_code 字段
+        cs->exit_status = thread_current()->exit_status;  // 你可能需要添加 exit_code 字段
         cs->exited = true;
         sema_up(&cs->wait_sema);  // 唤醒等待的父进程
         break;
@@ -285,12 +304,7 @@ void process_exit(void) {
     }
   }
 
-  // struct thread *cur = thread_current();
-// if (cur->child_status != NULL) {
-//   cur->child_status->exit_status = cur->exit_status;
-//   cur->child_status->exited = true;
-//   sema_up(&cur->child_status->wait_sema);
-// }
+
   sema_up(&temporary);
   thread_exit();
 
